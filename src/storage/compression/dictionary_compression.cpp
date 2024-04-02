@@ -8,26 +8,36 @@
 #include "duckdb/storage/segment/uncompressed.hpp"
 #include "duckdb/storage/string_uncompressed.hpp"
 #include "duckdb/storage/table/column_data_checkpointer.hpp"
+#include<stdio.h>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 namespace duckdb {
 
 // Abstract class for keeping compression state either for compression or size analysis
 class DictionaryCompressionState : public CompressionState {
 public:
+	void logMessage(const std::string &message) {
+		static std::ofstream logFile("C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log.txt", std::ios::app);
+		logFile << message << std::endl;
+	}
+
 	bool UpdateState(Vector &scan_vector, idx_t count) {
 		UnifiedVectorFormat vdata;
 		scan_vector.ToUnifiedFormat(count, vdata);
 		auto data = UnifiedVectorFormat::GetData<string_t>(vdata);
 		Verify();
-
+		logMessage("UpdateState: 'data' variable\n----------------------\n" + data->GetString() + "\n");
 		for (idx_t i = 0; i < count; i++) {
 			auto idx = vdata.sel->get_index(i);
 			size_t string_size = 0;
 			bool new_string = false;
 			auto row_is_valid = vdata.validity.RowIsValid(idx);
-
 			if (row_is_valid) {
 				string_size = data[idx].GetSize();
+				//logMessage("Hello from UpdateState()");
+				// std::cout << "Hello";
 				if (string_size >= StringUncompressed::STRING_BLOCK_LIMIT) {
 					// Big strings not implemented for dictionary compression
 					return false;
@@ -260,6 +270,7 @@ public:
 	}
 
 	idx_t Finalize() {
+		logMessage("Hello from Finalize()...");
 		auto &buffer_manager = BufferManager::GetBufferManager(checkpointer.GetDatabase());
 		auto handle = buffer_manager.Pin(current_segment->block);
 		D_ASSERT(current_dictionary.end == Storage::BLOCK_SIZE);
