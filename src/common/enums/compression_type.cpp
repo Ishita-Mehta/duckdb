@@ -28,13 +28,13 @@ CompressionType CompressionTypeFromString(const string &str) {
 		return CompressionType::COMPRESSION_UNCOMPRESSED;
 	} else if (compression == "rle") {
 		return CompressionType::COMPRESSION_RLE;
-	} else if (compression == "dictionary") {
+	} else if (compression == "delta") {
 		return CompressionType::COMPRESSION_DICTIONARY;
 	} else if (compression == "pfor") {
 		return CompressionType::COMPRESSION_PFOR_DELTA;
 	} else if (compression == "bitpacking") {
 		return CompressionType::COMPRESSION_BITPACKING;
-	} else if (compression == "fsst") {
+	} else if (compression == "snappy") {
 		return CompressionType::COMPRESSION_FSST;
 	} else if (compression == "chimp") {
 		return CompressionType::COMPRESSION_CHIMP;
@@ -60,13 +60,13 @@ string CompressionTypeToString(CompressionType type) {
 	case CompressionType::COMPRESSION_RLE:
 		return "RLE";
 	case CompressionType::COMPRESSION_DICTIONARY:
-		return "Dictionary";
+		return "Delta";
 	case CompressionType::COMPRESSION_PFOR_DELTA:
 		return "PFOR";
 	case CompressionType::COMPRESSION_BITPACKING:
 		return "BitPacking";
 	case CompressionType::COMPRESSION_FSST:
-		return "FSST";
+		return "Snappy";
 	case CompressionType::COMPRESSION_CHIMP:
 		return "Chimp";
 	case CompressionType::COMPRESSION_PATAS:

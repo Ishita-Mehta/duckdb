@@ -15,20 +15,22 @@
 
 namespace duckdb {
 
-// Abstract class for keeping compression state either for compression or size analysis
-class DictionaryCompressionState : public CompressionState {
-public:
 	void logMessage(const std::string &message) {
 		static std::ofstream logFile("C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log.txt", std::ios::app);
 		logFile << message << std::endl;
 	}
 
+// Abstract class for keeping compression state either for compression or size analysis
+class DictionaryCompressionState : public CompressionState {
+public:
+	
 	bool UpdateState(Vector &scan_vector, idx_t count) {
 		UnifiedVectorFormat vdata;
 		scan_vector.ToUnifiedFormat(count, vdata);
 		auto data = UnifiedVectorFormat::GetData<string_t>(vdata);
 		Verify();
-		logMessage("UpdateState: 'data' variable\n----------------------\n" + data->GetString() + "\n");
+		logMessage("In UpdateState() -> data: " + data->GetString());
+		// std::cout<<("UpdateState: 'data' variable\n----------------------\n" + data->GetString() + "\n");
 		for (idx_t i = 0; i < count; i++) {
 			auto idx = vdata.sel->get_index(i);
 			size_t string_size = 0;
@@ -36,8 +38,8 @@ public:
 			auto row_is_valid = vdata.validity.RowIsValid(idx);
 			if (row_is_valid) {
 				string_size = data[idx].GetSize();
-				//logMessage("Hello from UpdateState()");
-				// std::cout << "Hello";
+				// logMessage("Hello from UpdateState()");
+				//  std::cout << "Hello";
 				if (string_size >= StringUncompressed::STRING_BLOCK_LIMIT) {
 					// Big strings not implemented for dictionary compression
 					return false;
@@ -402,6 +404,7 @@ unique_ptr<AnalyzeState> DictionaryCompressionStorage::StringInitAnalyze(ColumnD
 
 bool DictionaryCompressionStorage::StringAnalyze(AnalyzeState &state_p, Vector &input, idx_t count) {
 	auto &state = state_p.Cast<DictionaryCompressionAnalyzeState>();
+	logMessage("Call from StringAnalyze");
 	return state.analyze_state->UpdateState(input, count);
 }
 
@@ -426,6 +429,7 @@ unique_ptr<CompressionState> DictionaryCompressionStorage::InitCompression(Colum
 
 void DictionaryCompressionStorage::Compress(CompressionState &state_p, Vector &scan_vector, idx_t count) {
 	auto &state = state_p.Cast<DictionaryCompressionCompressState>();
+	logMessage( "Call from Compress");
 	state.UpdateState(scan_vector, count);
 }
 
