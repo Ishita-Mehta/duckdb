@@ -181,7 +181,8 @@ idx_t FSSTStorage::StringFinalAnalyze(AnalyzeState &state_p) {
 	}
 	D_ASSERT(compressed_dict_size == (compressed_ptrs[res - 1] - compressed_ptrs[0]) + compressed_sizes[res - 1]);
 
-	auto minimum_width = BitpackingPrimitives::MinimumBitWidth(max_compressed_string_length);
+	auto minimum_width = BitpackingPrimitives::MinimumBitWidth((size_t)(std::ceil(max_compressed_string_length*0.5)));
+	/*auto minimum_width = BitpackingPrimitives::MinimumBitWidth(max_compressed_string_length);*/
 	auto bitpacked_offsets_size =
 	    BitpackingPrimitives::GetRequiredSize(string_count + state.empty_strings, minimum_width);
 

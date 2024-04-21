@@ -289,6 +289,7 @@ public:
 		index_buffer.push_back(NumericCast<uint32_t>(compressed_string_len));
 
 		max_compressed_string_length = MaxValue(max_compressed_string_length, compressed_string_len);
+		//max_compressed_string_length = compressed_string_len;
 
 		current_width = BitpackingPrimitives::MinimumBitWidth(max_compressed_string_length);
 		current_segment->count++;
