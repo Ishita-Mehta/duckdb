@@ -8,6 +8,7 @@ add_library_unity(
   fixed_size_uncompressed.cpp
   rle.cpp
   dictionary_compression.cpp
+  delta_encoding.cpp
   string_uncompressed.cpp
   uncompressed.cpp
   validity_uncompressed.cpp

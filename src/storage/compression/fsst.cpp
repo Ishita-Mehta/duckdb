@@ -9,6 +9,7 @@
 #include "duckdb/common/fsst.hpp"
 #include "miniz_wrapper.hpp"
 #include "fsst.h"
+#include <string>
 
 namespace duckdb {
 

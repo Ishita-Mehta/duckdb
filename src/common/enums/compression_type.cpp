@@ -28,13 +28,13 @@ CompressionType CompressionTypeFromString(const string &str) {
 		return CompressionType::COMPRESSION_UNCOMPRESSED;
 	} else if (compression == "rle") {
 		return CompressionType::COMPRESSION_RLE;
-	} else if (compression == "delta") {
+	} else if (compression == "dictionary") {
 		return CompressionType::COMPRESSION_DICTIONARY;
 	} else if (compression == "pfor") {
 		return CompressionType::COMPRESSION_PFOR_DELTA;
 	} else if (compression == "bitpacking") {
 		return CompressionType::COMPRESSION_BITPACKING;
-	} else if (compression == "snappy") {
+	} else if (compression == "fsst") {
 		return CompressionType::COMPRESSION_FSST;
 	} else if (compression == "chimp") {
 		return CompressionType::COMPRESSION_CHIMP;
@@ -44,6 +44,8 @@ CompressionType CompressionTypeFromString(const string &str) {
 		return CompressionType::COMPRESSION_ALP;
 	} else if (compression == "alprd") {
 		return CompressionType::COMPRESSION_ALPRD;
+	} else if (compression == "delta") {
+		return (CompressionType::COMPRESSION_DELTA);
 	} else {
 		return CompressionType::COMPRESSION_AUTO;
 	}
@@ -60,13 +62,13 @@ string CompressionTypeToString(CompressionType type) {
 	case CompressionType::COMPRESSION_RLE:
 		return "RLE";
 	case CompressionType::COMPRESSION_DICTIONARY:
-		return "Delta";
+		return "Dictionary";
 	case CompressionType::COMPRESSION_PFOR_DELTA:
 		return "PFOR";
 	case CompressionType::COMPRESSION_BITPACKING:
 		return "BitPacking";
 	case CompressionType::COMPRESSION_FSST:
-		return "Snappy";
+		return "FSST";
 	case CompressionType::COMPRESSION_CHIMP:
 		return "Chimp";
 	case CompressionType::COMPRESSION_PATAS:
@@ -75,6 +77,8 @@ string CompressionTypeToString(CompressionType type) {
 		return "ALP";
 	case CompressionType::COMPRESSION_ALPRD:
 		return "ALPRD";
+	case CompressionType::COMPRESSION_DELTA:
+		return "Delta";
 	default:
 		throw InternalException("Unrecognized compression type!");
 	}

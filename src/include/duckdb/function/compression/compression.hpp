@@ -38,6 +38,11 @@ struct DictionaryCompressionFun {
 	static bool TypeIsSupported(PhysicalType type);
 };
 
+struct DeltaEncodingCompressionFun {
+	static CompressionFunction GetFunction(PhysicalType type);
+	static bool TypeIsSupported(PhysicalType type);
+};
+
 struct ChimpCompressionFun {
 	static CompressionFunction GetFunction(PhysicalType type);
 	static bool TypeIsSupported(PhysicalType type);

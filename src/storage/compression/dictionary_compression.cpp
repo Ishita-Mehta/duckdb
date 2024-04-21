@@ -20,6 +20,57 @@ namespace duckdb {
 		logFile << message << std::endl;
 	}
 
+	void logMessageDelta(const std::string &message) {
+	    static std::ofstream logFile(
+	        "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/delta_log.txt", std::ios::app);
+	    logFile << message << std::endl;
+    }
+
+	void logMessageCompress(const std::string &message) {
+	    static std::ofstream logFile(
+	        "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/compressFn_log.txt", std::ios::app);
+	    logFile << message << std::endl;
+    }
+
+	void logDebugging(const std::string &message) {
+	    static std::ofstream logFile(
+	        "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/Debugging_log.txt",
+	        std::ios::app);
+	    logFile << message << std::endl;
+    }
+
+	void logDebuggingTESTING(const std::string &message) {
+	    static std::ofstream logFile(
+	        "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/TESTING_log.txt",
+	        std::ios::app);
+	    logFile << message << std::endl;
+    }
+
+	void logSubtract(const std::string &message) {
+	    static std::ofstream logFile(
+	        "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/Subtract_Log.txt", std::ios::app);
+	    logFile << message << std::endl;
+    }
+
+	void logSimplePrint(const std::string &message) {
+	    static std::ofstream logFile(
+	        "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/SimplePrint.txt",
+	        std::ios::app);
+	    logFile << message << std::endl;
+    }
+
+	void logV2(const std::string &message) {
+	    static std::ofstream logFile(
+	        "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/logV2.txt", std::ios::app);
+	    logFile << message << std::endl;
+    }
+
+	void logV3(const std::string &message) {
+	    static std::ofstream logFile(
+	        "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/logV3.txt", std::ios::app);
+	    logFile << message << std::endl;
+    }
+
 // Abstract class for keeping compression state either for compression or size analysis
 class DictionaryCompressionState : public CompressionState {
 public:
@@ -28,11 +79,13 @@ public:
 		UnifiedVectorFormat vdata;
 		scan_vector.ToUnifiedFormat(count, vdata);
 		auto data = UnifiedVectorFormat::GetData<string_t>(vdata);
+		auto result_data = FlatVector::GetData<string_t>(scan_vector);
 		Verify();
 		logMessage("In UpdateState() -> data: " + data->GetString());
 		// std::cout<<("UpdateState: 'data' variable\n----------------------\n" + data->GetString() + "\n");
 		for (idx_t i = 0; i < count; i++) {
 			auto idx = vdata.sel->get_index(i);
+			logMessageDelta(result_data[idx].GetString());
 			size_t string_size = 0;
 			bool new_string = false;
 			auto row_is_valid = vdata.validity.RowIsValid(idx);
@@ -117,6 +170,9 @@ struct DictionaryCompressionStorage {
 	                              idx_t result_offset);
 	static void StringScan(ColumnSegment &segment, ColumnScanState &state, idx_t scan_count, Vector &result);
 	static void StringFetchRow(ColumnSegment &segment, ColumnFetchState &state, row_t row_id, Vector &result,
+	                           idx_t result_idx);
+
+	static void StringFetchRowDelta(ColumnSegment &segment, ColumnFetchState &state, row_t row_id, Vector &result,
 	                           idx_t result_idx);
 
 	static bool HasEnoughSpace(idx_t current_count, idx_t index_count, idx_t dict_size,
@@ -428,9 +484,44 @@ unique_ptr<CompressionState> DictionaryCompressionStorage::InitCompression(Colum
 }
 
 void DictionaryCompressionStorage::Compress(CompressionState &state_p, Vector &scan_vector, idx_t count) {
+	// Changes for Delta Encoding
+	auto result_data = FlatVector::GetData<string_t>(scan_vector);
+	auto result_data_org = FlatVector::GetData<string_t>(scan_vector);
+	logDebuggingTESTING("Count: " + count);
+	idx_t oneCt = 1;
+	Vector *v2 = new Vector("");
+	v2->Resize(1, count);
+	//Vector *v3 = new Vector(LogicalType(), count);
+	for (idx_t i = 0; i < count; i++) {
+		//auto idx = vdata.sel->get_index(i);
+		logSimplePrint(result_data[i].GetString());
+		if (i != 0) {
+			/*result_data[i] = string_t(std::to_string(std::stof(result_data_org[i].GetString()) -
+			                                std::stof(result_data_org[i - oneCt].GetString())));*/
+			logSubtract(std::to_string(std::stof(result_data_org[i].GetString()) -
+			                           std::stof(result_data_org[i - oneCt].GetString())));
+			v2->SetValue(i, std::to_string(std::stof(result_data_org[i].GetString()) - std::stof(result_data_org[i - oneCt].GetString())));
+			//v3->SetValue(i, std::to_string(std::stof(result_data_org[i].GetString()) - std::stof(result_data_org[i - oneCt].GetString())));
+			
+			logV2(v2->GetValue(i).ToString() + "..");
+			//logV3(v3->GetValue(i).ToString());
+			/*scan_vector.SetValue(i, std::to_string(std::stof(result_data_org[i].GetString()) - std::stof(result_data_org[i - oneCt].GetString())));
+
+			logDebugging("result_data_org[i] - result_data_org[i-1] = " + result_data_org[i].GetString() + " - " +
+			             result_data_org[i - oneCt].GetString() + " = " + scan_vector.GetValue(i).ToString());*/
+		}
+		else {
+			logDebugging("Nah bhai, fail ho gya.");
+		}
+		//logMessageCompress(result_data[i].GetString());
+	}
+
+	//idx_t testIndex = 0;
+	//scan_vector.SetValue(testIndex, "hello");
+	// Changes End
 	auto &state = state_p.Cast<DictionaryCompressionCompressState>();
 	logMessage( "Call from Compress");
-	state.UpdateState(scan_vector, count);
+	state.UpdateState(*v2, count);
 }
 
 void DictionaryCompressionStorage::FinalizeCompress(CompressionState &state_p) {
@@ -585,8 +676,39 @@ void DictionaryCompressionStorage::StringFetchRow(ColumnSegment &segment, Column
 	auto selection_value = decompression_buffer[start_offset];
 	auto dict_offset = index_buffer_ptr[selection_value];
 	uint16_t str_len = GetStringLength(index_buffer_ptr, selection_value);
-
+	logMessageDelta(result_idx + "\t" + result_data[result_idx].GetString());
 	result_data[result_idx] = FetchStringFromDict(segment, dict, baseptr, dict_offset, str_len);
+}
+
+void DictionaryCompressionStorage::StringFetchRowDelta(ColumnSegment &segment, ColumnFetchState &state, row_t row_id,
+                                                  Vector &result, idx_t result_idx) {
+	// fetch a single row from the string segment
+	// first pin the main buffer if it is not already pinned
+	auto &handle = state.GetOrInsertHandle(segment);
+
+	auto baseptr = handle.Ptr() + segment.GetBlockOffset();
+	auto header_ptr = reinterpret_cast<dictionary_compression_header_t *>(baseptr);
+	auto dict = DictionaryCompressionStorage::GetDictionary(segment, handle);
+	auto index_buffer_offset = Load<uint32_t>(data_ptr_cast(&header_ptr->index_buffer_offset));
+	auto width = (bitpacking_width_t)Load<uint32_t>(data_ptr_cast(&header_ptr->bitpacking_width));
+	auto index_buffer_ptr = reinterpret_cast<uint32_t *>(baseptr + index_buffer_offset);
+	auto base_data = data_ptr_cast(baseptr + DICTIONARY_HEADER_SIZE);
+	auto result_data = FlatVector::GetData<string_t>(result);
+
+	// Handling non-bitpacking-group-aligned start values;
+	idx_t start_offset = row_id % BitpackingPrimitives::BITPACKING_ALGORITHM_GROUP_SIZE;
+
+	// Decompress part of selection buffer we need for this value.
+	sel_t decompression_buffer[BitpackingPrimitives::BITPACKING_ALGORITHM_GROUP_SIZE];
+	data_ptr_t src = data_ptr_cast(&base_data[((row_id - start_offset) * width) / 8]);
+	BitpackingPrimitives::UnPackBuffer<sel_t>(data_ptr_cast(decompression_buffer), src,
+	                                          BitpackingPrimitives::BITPACKING_ALGORITHM_GROUP_SIZE, width);
+
+	auto selection_value = decompression_buffer[start_offset];
+	auto dict_offset = index_buffer_ptr[selection_value];
+	uint16_t str_len = GetStringLength(index_buffer_ptr, selection_value);
+	logMessageDelta(result_idx + "\t" + result_data[result_idx].GetString());
+	result_data[result_idx] = "Testing";
 }
 
 //===--------------------------------------------------------------------===//

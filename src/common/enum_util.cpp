@@ -1141,8 +1141,11 @@ const char* EnumUtil::ToChars<CompressionType>(CompressionType value) {
 		return "COMPRESSION_ALP";
 	case CompressionType::COMPRESSION_ALPRD:
 		return "COMPRESSION_ALPRD";
+	case CompressionType::COMPRESSION_DELTA:
+		return "COMPRESSION_DELTA";
 	case CompressionType::COMPRESSION_COUNT:
 		return "COMPRESSION_COUNT";
+
 	default:
 		throw NotImplementedException(StringUtil::Format("Enum value: '%d' not implemented", value));
 	}
@@ -1185,6 +1188,9 @@ CompressionType EnumUtil::FromString<CompressionType>(const char *value) {
 	}
 	if (StringUtil::Equals(value, "COMPRESSION_ALPRD")) {
 		return CompressionType::COMPRESSION_ALPRD;
+	}
+	if (StringUtil::Equals(value, "COMPRESSION_DELTA")) {
+		return CompressionType::COMPRESSION_DELTA;
 	}
 	if (StringUtil::Equals(value, "COMPRESSION_COUNT")) {
 		return CompressionType::COMPRESSION_COUNT;
