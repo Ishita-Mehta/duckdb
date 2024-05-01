@@ -9,37 +9,40 @@
 #include "duckdb/storage/table/column_data_checkpointer.hpp"
 #include "fsst.h"
 #include "miniz_wrapper.hpp"
-
+#include<stdio.h>
+#include <fstream>
+#include <iostream>
 #include <string>
 
 namespace duckdb {
 
-void logMessage_DeltaEncoding(const std::string &message) {
-	static std::ofstream logFile("C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log_delta_encode.txt", std::ios::app);
-	logFile << message << std::endl;
-}
-
-void logUpdateState(const std::string &message) {
-	static std::ofstream logFile(
-	    "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log_update_state.txt",
-	    std::ios::app);
-	logFile << message << std::endl;
-}
-
-void logStringScanPartial(const std::string &message) {
-	static std::ofstream logFile(
-	    "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log_string_scan_partial.txt",
-	    std::ios::app);
-	logFile << message << std::endl;
-}
-
-void logStringFetchRow(const std::string &message) {
-	static std::ofstream logFile(
-	    "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log_string_fetch_row.txt",
-	    std::ios::app);
-	logFile << message << std::endl;
-}
-
+//void logMessage_DeltaEncoding(const std::string &message) {
+//	static std::ofstream logFile(
+//	    "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log_delta_encode.txt",
+//	    std::ios::app);
+//	logFile << message << std::endl;
+//}
+//
+//void logUpdateState(const std::string &message) {
+//	static std::ofstream logFile(
+//	    "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log_update_state.txt",
+//	    std::ios::app);
+//	logFile << message << std::endl;
+//}
+//
+//void logStringScanPartial(const std::string &message) {
+//	static std::ofstream logFile(
+//	    "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log_string_scan_partial.txt",
+//	    std::ios::app);
+//	logFile << message << std::endl;
+//}
+//
+//void logStringFetchRow(const std::string &message) {
+//	static std::ofstream logFile(
+//	    "C:/Tanmay/2023/USC/Spring 2024/ADS/Project/__forked_duckdb/duckdb/logging/log_string_fetch_row.txt",
+//	    std::ios::app);
+//	logFile << message << std::endl;
+//}
 
 typedef struct {
 	uint32_t dict_size;
@@ -86,7 +89,7 @@ struct DeltaEncodingStorage {
 	static char *FetchStringPointer(StringDictionaryContainer dict, data_ptr_t baseptr, int32_t dict_offset);
 	static bp_delta_encoding_offsets_t CalculateBpDeltaOffsets(int64_t last_known_row, idx_t start, idx_t scan_count);
 	static bool ParseDeltaSegmentHeader(data_ptr_t base_ptr, duckdb_fsst_decoder_t *decoder_out,
-	                                   bitpacking_width_t *width_out);
+	                                    bitpacking_width_t *width_out);
 };
 
 //===--------------------------------------------------------------------===//
@@ -227,7 +230,8 @@ idx_t DeltaEncodingStorage::StringFinalAnalyze(AnalyzeState &state_p) {
 class DeltaCompressionState : public CompressionState {
 public:
 	explicit DeltaCompressionState(ColumnDataCheckpointer &checkpointer)
-	    : checkpointer(checkpointer), function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_DELTA)) {
+	    : checkpointer(checkpointer),
+	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_DELTA)) {
 		CreateEmptySegment(checkpointer.GetRowGroup().start);
 	}
 
@@ -260,20 +264,20 @@ public:
 	}
 
 	void UpdateState(string_t uncompressed_string, unsigned char *compressed_string, size_t compressed_string_len) {
-		logUpdateState("Bhai yeh dekh input: " + uncompressed_string.GetString());
-
+		//logUpdateState("Bhai yeh dekh input: " + uncompressed_string.GetString());
 
 		std::string result;
 		// Iterate through the compressed_string until the null terminator is encountered
 		for (unsigned char *ptr = compressed_string; *ptr != '\0'; ++ptr) {
 			result += *ptr; // Append each character to the result string
 		}
-		logUpdateState("Bhai compressed: " + result);
+		//logUpdateState("Bhai compressed: " + result);
 
 		if (!HasEnoughSpace(compressed_string_len)) {
 			Flush();
 			if (!HasEnoughSpace(compressed_string_len)) {
-				throw InternalException("Delta Encoding string compression failed due to insufficient space in empty block");
+				throw InternalException(
+				    "Delta Encoding string compression failed due to insufficient space in empty block");
 			};
 		}
 
@@ -289,7 +293,7 @@ public:
 		index_buffer.push_back(NumericCast<uint32_t>(compressed_string_len));
 
 		max_compressed_string_length = MaxValue(max_compressed_string_length, compressed_string_len);
-		//max_compressed_string_length = compressed_string_len;
+		// max_compressed_string_length = compressed_string_len;
 
 		current_width = BitpackingPrimitives::MinimumBitWidth(max_compressed_string_length);
 		current_segment->count++;
@@ -299,7 +303,8 @@ public:
 		if (!HasEnoughSpace(0)) {
 			Flush();
 			if (!HasEnoughSpace(0)) {
-				throw InternalException("Delta Encoding string compression failed due to insufficient space in empty block");
+				throw InternalException(
+				    "Delta Encoding string compression failed due to insufficient space in empty block");
 			};
 		}
 		index_buffer.push_back(0);
@@ -430,7 +435,7 @@ public:
 };
 
 unique_ptr<CompressionState> DeltaEncodingStorage::InitCompression(ColumnDataCheckpointer &checkpointer,
-                                                          unique_ptr<AnalyzeState> analyze_state_p) {
+                                                                   unique_ptr<AnalyzeState> analyze_state_p) {
 	auto &analyze_state = analyze_state_p->Cast<DeltaAnalyzeState>();
 	auto compression_state = make_uniq<DeltaCompressionState>(checkpointer);
 
@@ -448,7 +453,7 @@ unique_ptr<CompressionState> DeltaEncodingStorage::InitCompression(ColumnDataChe
 
 void DeltaEncodingStorage::Compress(CompressionState &state_p, Vector &scan_vector, idx_t count) {
 	auto &state = state_p.Cast<DeltaCompressionState>();
-	logMessage_DeltaEncoding("In Compress");
+	//logMessage_DeltaEncoding("In Compress");
 	// Get vector data
 	UnifiedVectorFormat vdata;
 	scan_vector.ToUnifiedFormat(count, vdata);
@@ -458,12 +463,12 @@ void DeltaEncodingStorage::Compress(CompressionState &state_p, Vector &scan_vect
 	vector<int32_t> values;
 	for (idx_t i = 0; i < count; i++) {
 		auto idx = vdata.sel->get_index(i);
-		logMessage_DeltaEncoding("data[idx]: " + data[idx].GetString());
+		//logMessage_DeltaEncoding("data[idx]: " + data[idx].GetString());
 		// Note: we treat nulls and empty strings the same
 		if (!vdata.validity.RowIsValid(idx) || data[idx].GetSize() == 0) {
 			values.push_back(0); // Represent null or empty string as 0
 		} else {
-			logMessage_DeltaEncoding("data[idx] pushed to values[]: " + data[idx].GetString());
+			//logMessage_DeltaEncoding("data[idx] pushed to values[]: " + data[idx].GetString());
 			// Convert string to integer
 			values.push_back(std::stoll(data[idx].GetData()));
 		}
@@ -485,8 +490,8 @@ void DeltaEncodingStorage::Compress(CompressionState &state_p, Vector &scan_vect
 		} else {
 			// Convert delta-encoded integer back to string
 			string encoded_str = to_string(delta_encoded[i]);
-			logMessage_DeltaEncoding("encoded_str: " + encoded_str);
-			logMessage_DeltaEncoding("encoded_str_size: " + std::to_string(encoded_str.length()));
+			//logMessage_DeltaEncoding("encoded_str: " + encoded_str);
+			//logMessage_DeltaEncoding("encoded_str_size: " + std::to_string(encoded_str.length()));
 			state.UpdateState(data[idx], (unsigned char *)encoded_str.c_str(), encoded_str.size());
 		}
 	}
@@ -538,7 +543,8 @@ unique_ptr<SegmentScanState> DeltaEncodingStorage::StringInitScan(ColumnSegment 
 	return std::move(state);
 }
 
-void DeltaEncoding_DecodeIndices(uint32_t *buffer_in, uint32_t *buffer_out, idx_t decode_count, uint32_t last_known_value) {
+void DeltaEncoding_DecodeIndices(uint32_t *buffer_in, uint32_t *buffer_out, idx_t decode_count,
+                                 uint32_t last_known_value) {
 	buffer_out[0] = buffer_in[0];
 	buffer_out[0] += last_known_value;
 	for (idx_t i = 1; i < decode_count; i++) {
@@ -555,9 +561,9 @@ void Delta_BitUnpackRange(data_ptr_t src_ptr, data_ptr_t dst_ptr, idx_t count, i
 // Scan base data
 //===--------------------------------------------------------------------===//
 template <bool ALLOW_DELTA_VECTORS>
-void DeltaEncodingStorage::StringScanPartial(ColumnSegment &segment, ColumnScanState &state, idx_t scan_count, Vector &result,
-                                    idx_t result_offset) {
-	logStringScanPartial("In StringScanPartial");
+void DeltaEncodingStorage::StringScanPartial(ColumnSegment &segment, ColumnScanState &state, idx_t scan_count,
+                                             Vector &result, idx_t result_offset) {
+	//logStringScanPartial("In StringScanPartial");
 	auto &scan_state = state.scan_state->Cast<DeltaEncodingScanState>();
 	auto start = segment.GetRelativeIndex(state.row_index);
 
@@ -596,11 +602,10 @@ void DeltaEncodingStorage::StringScanPartial(ColumnSegment &segment, ColumnScanS
 
 	// My addition
 	/*for (idx_t i = 0; i < result_data->GetSize(); i++) {
-		logStringScanPartial("SSP: " + result_data[i].GetString());
+	    logStringScanPartial("SSP: " + result_data[i].GetString());
 	}*/
 	// End
-	//logStringScanPartial("SSP: " + result_data[0].GetString());
-
+	// logStringScanPartial("SSP: " + result_data[0].GetString());
 
 	if (start == 0 || scan_state.last_known_row >= (int64_t)start) {
 		scan_state.ResetStoredDelta();
@@ -610,10 +615,10 @@ void DeltaEncodingStorage::StringScanPartial(ColumnSegment &segment, ColumnScanS
 
 	auto bitunpack_buffer = unique_ptr<uint32_t[]>(new uint32_t[offsets.total_bitunpack_count]);
 	Delta_BitUnpackRange(base_data, data_ptr_cast(bitunpack_buffer.get()), offsets.total_bitunpack_count,
-	               offsets.bitunpack_start_row, scan_state.current_width);
+	                     offsets.bitunpack_start_row, scan_state.current_width);
 	auto delta_decode_buffer = unique_ptr<uint32_t[]>(new uint32_t[offsets.total_delta_decode_count]);
 	DeltaEncoding_DecodeIndices(bitunpack_buffer.get() + offsets.bitunpack_alignment_offset, delta_decode_buffer.get(),
-	                   offsets.total_delta_decode_count, scan_state.last_known_index);
+	                            offsets.total_delta_decode_count, scan_state.last_known_index);
 
 	for (idx_t i = 0; i < scan_count; i++) {
 		uint32_t string_length = bitunpack_buffer[i + offsets.scan_offset];
@@ -622,12 +627,13 @@ void DeltaEncodingStorage::StringScanPartial(ColumnSegment &segment, ColumnScanS
 		    string_length);
 		// Decompressing
 		if (i != 0) {
-			result_data[i] = std::to_string(std::stoi(result_data[i - 1].GetString()) + std::stoi(result_data[i].GetString()));
+			result_data[i] =
+			    std::to_string(std::stoi(result_data[i - 1].GetString()) + std::stoi(result_data[i].GetString()));
 		}
 		DeltaEncodingVector::SetCount(result, scan_count);
 	}
 
-	//if (enable_fsst_vectors) {
+	// if (enable_fsst_vectors) {
 	//	// Lookup decompressed offsets in dict
 	//	for (idx_t i = 0; i < scan_count; i++) {
 	//		uint32_t string_length = bitunpack_buffer[i + offsets.scan_offset];
@@ -636,8 +642,8 @@ void DeltaEncodingStorage::StringScanPartial(ColumnSegment &segment, ColumnScanS
 	//		    string_length);
 	//		DeltaEncodingVector::SetCount(result, scan_count);
 	//	}
-	//}
-	// else {
+	// }
+	//  else {
 	//	// Just decompress
 	//	for (idx_t i = 0; i < scan_count; i++) {
 	//		uint32_t str_len = bitunpack_buffer[i + offsets.scan_offset];
@@ -657,7 +663,8 @@ void DeltaEncodingStorage::StringScanPartial(ColumnSegment &segment, ColumnScanS
 	                          start + scan_count - 1);
 }
 
-void DeltaEncodingStorage::StringScan(ColumnSegment &segment, ColumnScanState &state, idx_t scan_count, Vector &result) {
+void DeltaEncodingStorage::StringScan(ColumnSegment &segment, ColumnScanState &state, idx_t scan_count,
+                                      Vector &result) {
 	StringScanPartial<true>(segment, state, scan_count, result, 0);
 }
 
@@ -665,8 +672,8 @@ void DeltaEncodingStorage::StringScan(ColumnSegment &segment, ColumnScanState &s
 // Fetch
 //===--------------------------------------------------------------------===//
 void DeltaEncodingStorage::StringFetchRow(ColumnSegment &segment, ColumnFetchState &state, row_t row_id, Vector &result,
-                                 idx_t result_idx) {
-	logStringFetchRow("In StringFetchRow");
+                                          idx_t result_idx) {
+	//logStringFetchRow("In StringFetchRow");
 	auto &buffer_manager = BufferManager::GetBufferManager(segment.db);
 	auto handle = buffer_manager.Pin(segment.block);
 	auto base_ptr = handle.Ptr() + segment.GetBlockOffset();
@@ -686,17 +693,17 @@ void DeltaEncodingStorage::StringFetchRow(ColumnSegment &segment, ColumnFetchSta
 
 		auto bitunpack_buffer = unique_ptr<uint32_t[]>(new uint32_t[offsets.total_bitunpack_count]);
 		Delta_BitUnpackRange(base_data, data_ptr_cast(bitunpack_buffer.get()), offsets.total_bitunpack_count,
-		               offsets.bitunpack_start_row, width);
+		                     offsets.bitunpack_start_row, width);
 		auto delta_decode_buffer = unique_ptr<uint32_t[]>(new uint32_t[offsets.total_delta_decode_count]);
-		DeltaEncoding_DecodeIndices(bitunpack_buffer.get() + offsets.bitunpack_alignment_offset, delta_decode_buffer.get(),
-		                   offsets.total_delta_decode_count, 0);
+		DeltaEncoding_DecodeIndices(bitunpack_buffer.get() + offsets.bitunpack_alignment_offset,
+		                            delta_decode_buffer.get(), offsets.total_delta_decode_count, 0);
 
 		uint32_t string_length = bitunpack_buffer[offsets.scan_offset];
 
 		string_t compressed_string = UncompressedStringStorage::FetchStringFromDict(
 		    segment, dict, result, base_ptr, delta_decode_buffer[offsets.unused_delta_decoded_values], string_length);
 
-		logStringFetchRow("StringFetchRow: " + compressed_string.GetString());
+		//logStringFetchRow("StringFetchRow: " + compressed_string.GetString());
 		// result_data[result_idx] = compressed_string;
 
 		result_data[result_idx] = FSSTPrimitives::DecompressValue((void *)&decoder, result, compressed_string.GetData(),
@@ -712,11 +719,12 @@ void DeltaEncodingStorage::StringFetchRow(ColumnSegment &segment, ColumnFetchSta
 //===--------------------------------------------------------------------===//
 CompressionFunction DeltaEncodingCompressionFun::GetFunction(PhysicalType data_type) {
 	D_ASSERT(data_type == PhysicalType::VARCHAR);
-	return CompressionFunction(
-	    CompressionType::COMPRESSION_DELTA, data_type, DeltaEncodingStorage::StringInitAnalyze, DeltaEncodingStorage::StringAnalyze,
-	    DeltaEncodingStorage::StringFinalAnalyze, DeltaEncodingStorage::InitCompression, DeltaEncodingStorage::Compress,
-	    DeltaEncodingStorage::FinalizeCompress, DeltaEncodingStorage::StringInitScan, DeltaEncodingStorage::StringScan,
-	    DeltaEncodingStorage::StringScanPartial<false>, DeltaEncodingStorage::StringFetchRow, UncompressedFunctions::EmptySkip);
+	return CompressionFunction(CompressionType::COMPRESSION_DELTA, data_type, DeltaEncodingStorage::StringInitAnalyze,
+	                           DeltaEncodingStorage::StringAnalyze, DeltaEncodingStorage::StringFinalAnalyze,
+	                           DeltaEncodingStorage::InitCompression, DeltaEncodingStorage::Compress,
+	                           DeltaEncodingStorage::FinalizeCompress, DeltaEncodingStorage::StringInitScan,
+	                           DeltaEncodingStorage::StringScan, DeltaEncodingStorage::StringScanPartial<false>,
+	                           DeltaEncodingStorage::StringFetchRow, UncompressedFunctions::EmptySkip);
 }
 
 bool DeltaEncodingCompressionFun::TypeIsSupported(PhysicalType type) {
@@ -726,7 +734,8 @@ bool DeltaEncodingCompressionFun::TypeIsSupported(PhysicalType type) {
 //===--------------------------------------------------------------------===//
 // Helper Functions
 //===--------------------------------------------------------------------===//
-void DeltaEncodingStorage::SetDictionary(ColumnSegment &segment, BufferHandle &handle, StringDictionaryContainer container) {
+void DeltaEncodingStorage::SetDictionary(ColumnSegment &segment, BufferHandle &handle,
+                                         StringDictionaryContainer container) {
 	auto header_ptr = reinterpret_cast<delta_compression_header_t *>(handle.Ptr() + segment.GetBlockOffset());
 	Store<uint32_t>(container.size, data_ptr_cast(&header_ptr->dict_size));
 	Store<uint32_t>(container.end, data_ptr_cast(&header_ptr->dict_end));
@@ -740,7 +749,8 @@ StringDictionaryContainer DeltaEncodingStorage::GetDictionary(ColumnSegment &seg
 	return container;
 }
 
-char *DeltaEncodingStorage::FetchStringPointer(StringDictionaryContainer dict, data_ptr_t baseptr, int32_t dict_offset) {
+char *DeltaEncodingStorage::FetchStringPointer(StringDictionaryContainer dict, data_ptr_t baseptr,
+                                               int32_t dict_offset) {
 	if (dict_offset == 0) {
 		return nullptr;
 	}
@@ -752,7 +762,7 @@ char *DeltaEncodingStorage::FetchStringPointer(StringDictionaryContainer dict, d
 
 // Returns false if no symbol table was found. This means all strings are either empty or null
 bool DeltaEncodingStorage::ParseDeltaSegmentHeader(data_ptr_t base_ptr, duckdb_fsst_decoder_t *decoder_out,
-                                         bitpacking_width_t *width_out) {
+                                                   bitpacking_width_t *width_out) {
 	auto header_ptr = reinterpret_cast<delta_compression_header_t *>(base_ptr);
 	auto delta_symbol_table_offset = Load<uint32_t>(data_ptr_cast(&header_ptr->delta_symbol_table_offset));
 	*width_out = (bitpacking_width_t)(Load<uint32_t>(data_ptr_cast(&header_ptr->bitpacking_width)));
@@ -762,7 +772,8 @@ bool DeltaEncodingStorage::ParseDeltaSegmentHeader(data_ptr_t base_ptr, duckdb_f
 // The calculation of offsets and counts while scanning or fetching is a bit tricky, for two reasons:
 // - bitunpacking needs to be aligned to BITPACKING_ALGORITHM_GROUP_SIZE
 // - delta decoding needs to decode from the last known value.
-bp_delta_encoding_offsets_t DeltaEncodingStorage::CalculateBpDeltaOffsets(int64_t last_known_row, idx_t start, idx_t scan_count) {
+bp_delta_encoding_offsets_t DeltaEncodingStorage::CalculateBpDeltaOffsets(int64_t last_known_row, idx_t start,
+                                                                          idx_t scan_count) {
 	D_ASSERT((idx_t)(last_known_row + 1) <= start);
 	bp_delta_encoding_offsets_t result;
 
