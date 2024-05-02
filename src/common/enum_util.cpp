@@ -1143,6 +1143,8 @@ const char* EnumUtil::ToChars<CompressionType>(CompressionType value) {
 		return "COMPRESSION_ALPRD";
 	case CompressionType::COMPRESSION_DELTA:
 		return "COMPRESSION_DELTA";
+	case CompressionType::COMPRESSION_SNAPPY:
+		return "COMPRESSION_SNAPPY";
 	case CompressionType::COMPRESSION_COUNT:
 		return "COMPRESSION_COUNT";
 
@@ -1191,6 +1193,9 @@ CompressionType EnumUtil::FromString<CompressionType>(const char *value) {
 	}
 	if (StringUtil::Equals(value, "COMPRESSION_DELTA")) {
 		return CompressionType::COMPRESSION_DELTA;
+	}
+	if (StringUtil::Equals(value, "COMPRESSION_SNAPPY")) {
+		return CompressionType::COMPRESSION_SNAPPY;
 	}
 	if (StringUtil::Equals(value, "COMPRESSION_COUNT")) {
 		return CompressionType::COMPRESSION_COUNT;

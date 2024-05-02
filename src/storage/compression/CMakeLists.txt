@@ -1,6 +1,11 @@
 add_subdirectory(chimp)
 add_subdirectory(alp)
 
+include_directories(
+  include
+  ../../third_party/snappy
+)
+
 add_library_unity(
   duckdb_storage_compression
   OBJECT
@@ -16,6 +21,7 @@ add_library_unity(
   bitpacking_hugeint.cpp
   patas.cpp
   alprd.cpp
+  snappy.cpp
   fsst.cpp)
 set(ALL_OBJECT_FILES
     ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:duckdb_storage_compression>

@@ -27,6 +27,7 @@ static DefaultCompressionMethod internal_compression_methods[] = {
     {CompressionType::COMPRESSION_ALP, AlpCompressionFun::GetFunction, AlpCompressionFun::TypeIsSupported},
     {CompressionType::COMPRESSION_ALPRD, AlpRDCompressionFun::GetFunction, AlpRDCompressionFun::TypeIsSupported},
     {CompressionType::COMPRESSION_FSST, FSSTFun::GetFunction, FSSTFun::TypeIsSupported},
+    {CompressionType::COMPRESSION_SNAPPY, SnappyFun::GetFunction, SnappyFun::TypeIsSupported},
     {CompressionType::COMPRESSION_AUTO, nullptr, nullptr}};
 
 static optional_ptr<CompressionFunction> FindCompressionFunction(CompressionFunctionSet &set, CompressionType type,
@@ -83,6 +84,7 @@ vector<reference<CompressionFunction>> DBConfig::GetCompressionFunctions(Physica
 	TryLoadCompression(*this, result, CompressionType::COMPRESSION_ALP, data_type);
 	TryLoadCompression(*this, result, CompressionType::COMPRESSION_ALPRD, data_type);
 	TryLoadCompression(*this, result, CompressionType::COMPRESSION_FSST, data_type);
+	TryLoadCompression(*this, result, CompressionType::COMPRESSION_SNAPPY, data_type);
 	return result;
 }
 

@@ -46,6 +46,8 @@ CompressionType CompressionTypeFromString(const string &str) {
 		return CompressionType::COMPRESSION_ALPRD;
 	} else if (compression == "delta") {
 		return (CompressionType::COMPRESSION_DELTA);
+	} else if (compression == "snappy") {
+		return CompressionType::COMPRESSION_SNAPPY;
 	} else {
 		return CompressionType::COMPRESSION_AUTO;
 	}
@@ -79,10 +81,12 @@ string CompressionTypeToString(CompressionType type) {
 		return "ALPRD";
 	case CompressionType::COMPRESSION_DELTA:
 		return "Delta";
+	case CompressionType::COMPRESSION_SNAPPY:
+		return "Snappy";
 	default:
 		throw InternalException("Unrecognized compression type!");
 	}
 }
-// LCOV_EXCL_STOP
+// LCOV_EXCL_STOPSS
 
 } // namespace duckdb

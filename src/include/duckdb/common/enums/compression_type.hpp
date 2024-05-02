@@ -27,6 +27,7 @@ enum class CompressionType : uint8_t {
 	COMPRESSION_ALP = 10,
 	COMPRESSION_ALPRD = 11,
 	COMPRESSION_DELTA = 12,
+	COMPRESSION_SNAPPY = 13,
 	COMPRESSION_COUNT // This has to stay the last entry of the type!
 };
 

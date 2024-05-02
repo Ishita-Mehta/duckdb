@@ -264,14 +264,14 @@ public:
 	}
 
 	void UpdateState(string_t uncompressed_string, unsigned char *compressed_string, size_t compressed_string_len) {
-		//logUpdateState("Bhai yeh dekh input: " + uncompressed_string.GetString());
+		//logUpdateState("input: " + uncompressed_string.GetString());
 
 		std::string result;
 		// Iterate through the compressed_string until the null terminator is encountered
 		for (unsigned char *ptr = compressed_string; *ptr != '\0'; ++ptr) {
 			result += *ptr; // Append each character to the result string
 		}
-		//logUpdateState("Bhai compressed: " + result);
+		//logUpdateState("compressed: " + result);
 
 		if (!HasEnoughSpace(compressed_string_len)) {
 			Flush();
